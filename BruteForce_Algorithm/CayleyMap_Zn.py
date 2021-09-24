@@ -166,13 +166,13 @@ def calculate_genus(rho):
 
         # Now use a formula derived from the relationship between gcd(m,n), m, n, and lcm(m,n)
         # to find the multiplicity of the lambda that was found
+
         mult = ((n + 1)/(math.gcd(m, n + 1)))
         face_lambda = mult * counter
 
         faces = faces + (((n+1) * (counter))/(face_lambda))
         
     # now calculate the euler characteristic
-
     euler_char = vertices - edges + faces 
 
 
@@ -228,7 +228,7 @@ def find_genus(n):
         if(loop == True):
             genus = calculate_genus(rho)
             if(genus < lowest_genus):
-                print("hi)")
+                print("*Found lower genus*")
                 print("rho:", rho)
                 print("genus:", genus)
                 lowest_genus = genus
