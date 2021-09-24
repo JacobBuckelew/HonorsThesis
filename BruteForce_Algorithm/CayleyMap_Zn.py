@@ -1,8 +1,15 @@
-######################################################################################
 
-# CayleyMap_Zn determines an optimal cayley map genus for the finite cyclic group Z_n
+""""
+CayleyMap_Zn determines an optimal cayley map genus for the finite cyclic group Z_n
 
-######################################################################################
+
+Jacob Buckelew
+Fall 2021
+Rollins College
+"""
+
+
+
 import math
 
 
