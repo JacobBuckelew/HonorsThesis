@@ -180,6 +180,8 @@ def calculate_genus(rho):
 
     genus = int((euler_char - 2)/(-2))
 
+    print(rho)
+    print(genus)
 
     return genus
 
@@ -219,7 +221,7 @@ def find_genus(n):
     low_rho = []
     low_rho = rho.copy()
     i = 1
-    while((loop == True) and (lowest_genus != opt_genus)):
+    while((loop == True)):
         rho = unique_perm(rho)
         if(rho == False):
             loop = False
