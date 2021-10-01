@@ -10,6 +10,7 @@ Rollins College
 
 import math, random
 import numpy as np
+from numpy.random import rand
 
 
 # optimal_genus calculates the optimal genus for a complete graph Kn embedding
@@ -193,6 +194,21 @@ def find_neighbors(rho):
     
     return neighbors
 
+
+
+def accept_neighbor(g_current, g_neighbor):
+
+
+    prob_accept = 1 / (1 + (math.exp(((g_current) - (g_neighbor))/ .10)))
+    print("Acceptance probability: ", prob_accept)
+    p = random.random()
+    print("P:", p)
+    if prob_accept <= p:
+        print("Accept the probability")
+        return True
+    else:
+        return False
+
 # hc_search will perform a local search using the hill climbing algorithm
 # to find an optimal cayley map genus for the given Zn group
 
@@ -239,37 +255,67 @@ def hc_search(group):
     # the algorithm will break from the loop and return the best rho and its genus
     # once the current permutation's neighbors do not have a lower genus
     
-    previous_permutations = []
+    #previous_permutations = []
+    previous_permutation = current_permutation
+
+    rho_elements = []
+    i = 1
+    while (i < len(rho)):
+        rho_elements.append(i)
+        i = i + 1
 
 
 
     while(len(neighbors) != 0):
         # keep track of next permutation to move to and its genus for comparison reasons
         next_permutation = None
-        print("All previous permutations:", previous_permutations)
+        transition = False
+        #print("All previous permutations:", previous_permutations)
         next_genus = 1000
         print("Rho's Neighbors: ", neighbors)
-        # iterate through all neighbors and compare each of their genuses to find 
-        # most optimal neighbor
-        for i in range(len(neighbors)):
+        # randomly choose an order to  to examine using the random sample function
+
+        size_neighbors = len(neighbors)
+
+
+        for i in range(size_neighbors):
+            random_choice = random.choice(neighbors)
+            neighbors.remove(random_choice)
+            print("Random choice:", random_choice)
             print("Next_genus: ", next_genus)
             # for each neighbor check to see if they have been visited previously
-            prev_perm = False
-            for j in range(len(previous_permutations)):
-                if(previous_permutations[j] == neighbors[i]):
-                    print("Found previous permutation:", neighbors[i])
-                    prev_perm = True
-            if(prev_perm != True):
-                neighbor_genus = calculate_genus(neighbors[i])
-                print("Neighbor " + str(neighbors[i]) + " has genus " + str(neighbor_genus) )
-                if(neighbor_genus <= next_genus):
-                    next_permutation = neighbors[i]
-                    print("Next permutation", next_permutation)
+            #prev_perm = False
+            #for j in range(len(previous_permutations)):
+                #if(previous_permutations[j] == neighbors[i]):
+                    #print("Found previous permutation:", neighbors[i])
+                    #prev_perm = True
+            
+            if(random_choice != previous_permutation):
+                neighbor_genus = calculate_genus(random_choice)
+                print("Neighbor " + str(random_choice) + " has genus " + str(neighbor_genus) )
+
+                # Decide whether to accept transitioning to this neighbor or not
+
+                transition = accept_neighbor(genus, neighbor_genus)
+
+                if(transition == True):
                     next_genus = neighbor_genus
-                    #if(next_genus == opt_genus):
-                        #return next_permutation, next_genus
+                    next_permutation = random_choice
+                    if(next_genus == opt_genus):
+                        return next_permutation, next_genus
+                    break
+
+
+                # if(neighbor_genus <= next_genus):
+                #     next_permutation = neighbors[i]
+                #     print("Next permutation", next_permutation)
+                #     next_genus = neighbor_genus
+                #     if(next_genus == opt_genus):
+                #         return next_permutation, next_genus
             else:
                 print("Neighbor #" + str(i) + " is a previously visited permutation")
+
+            
         
         # then compare the neighboring genus to the current permutations genus
         print("Next lower genus:", next_genus)
@@ -282,7 +328,7 @@ def hc_search(group):
 
         # move to next permutation and loop again with new neighbors
         # save the previous permutation to ensure we don't loop endlessly
-        previous_permutations.append(current_permutation)
+        previous_permutations = current_permutation
         current_permutation = next_permutation
         print("Current permutation: ", current_permutation)
         print("Starting permutation:, ", starting_permutation)
