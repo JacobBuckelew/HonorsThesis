@@ -1,7 +1,8 @@
 """ 
 
-CayleyMap_Zn_HC.py applies a hill climbing approach to solving the problem of minimizing 
-of a Cayley Map embedding for the finite cyclic group Zn 
+OptCayleyMap_Zn.py is a large program that encompasses three different search algorithms to find an optimal
+Cayley map embedding for a given Z_n group. The user will input the size of the group and be given the option
+to choose a brute force search, hill climbing search, or stochastic hill climbing search
 
 Jacob Buckelew
 Fall 2021
