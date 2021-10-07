@@ -10,7 +10,6 @@ Rollins College
 
 import math, random
 import numpy as np
-from numpy.random import rand
 
 
 # optimal_genus calculates the optimal genus for a complete graph Kn embedding
@@ -195,6 +194,113 @@ def find_neighbors(rho):
     return neighbors
 
 
+# unique_perm generates the next largest unique permutation of a list of numbers
+# returns a list of integers
+def unique_perm(rho):
+    # i will be used to iterate through the list of numbers starting from the end to find a rho[i] such that rho[i] > rho[i - 1]
+
+    i = len(rho) - 1
+
+    # Now loop through list starting from the end
+    # 2 conditions must satisfy: there rho[i - 1] > rho[i] and that i > 1 since we dont care about comparing the 1 at the beginning
+    # to the following number
+    while((rho[i - 1] > rho[i] and i > 1)):
+        i = i - 1
+    
+    # if i reached 0 after last iteration of the while loop, then the list is in descending order and is the greatest permutation possible
+    # return false to tell program that the last unique permutation was already found
+    if( i <= 1):
+        return False
+    
+
+    # Now that we have found an index that satisfies rho[i] > rho[i - 1]
+    # We need to search again from the end of the list for the largest rho[j] such that rho[j] > rho[i - 1]
+    j = len(rho) - 1
+
+    # We'll loop on one conditions: rho[j] <= rho[i - 1]
+    # there must exist some rho[j] in this part of the subarray so we don't have to worry about j > 0
+    while((rho[j] <= rho[i - 1])):
+        j = j - 1
+    
+    # Now we will need to swap rho[i - 1] and rho[j]
+
+    temp = rho[i - 1]
+    rho[i - 1] = rho[j]
+    rho[j] = temp
+
+
+    # Finally we will need to reverse the sequence of elements rho[i] -> rho[length - 1]
+
+    # Loop until i > j
+    j = len(rho) - 1
+    while(i < j):
+        temp = rho[i]
+        rho[i] = rho[j]
+        rho[j] = temp
+        i = i + 1
+        j = j - 1
+
+    
+    return rho
+
+
+def brute_search(n):
+    # n - 1 elements in our rho
+    elements = n - 1
+
+    # keep track of the permutation that generates most optimal genus(based on Ringel and Young theorem)
+    optimal_rho = list
+
+    # also find the optimal genus according to Ringel and Young by calling optimal_genus(n)
+    opt_genus = optimal_genus(n)
+
+
+    # also store a string that will be used as input into a recursive function to find permutations of the
+    # elements greater than 1 in the group of elements. 
+
+    #We'll start with the rho in ascending order from 2...n-1
+
+    rho = []
+    for i in range(1,n):
+        rho.append(i)
+
+
+    # loop will be a stopping condition boolean
+
+    loop = True
+    genus = 0
+    genus = calculate_genus(rho)
+    # we'll assume that this genus is lowest for comparison reasons
+    lowest_genus = genus
+    low_rho = []
+    low_rho = rho.copy()
+    i = 1
+    while((loop == True)):
+        rho = unique_perm(rho)
+        if(rho == False):
+            loop = False
+        # analyze rho here
+        # keep track of a running lowest genus or find the optimal one according to ringel and young
+        if(loop == True):
+            genus = calculate_genus(rho)
+            if(genus < lowest_genus):
+                print("*Found lower genus*")
+                print("rho:", rho)
+                print("genus:", genus)
+                lowest_genus = genus
+                low_rho = rho.copy()
+            i = i + 1
+            if(i % 1000000 == 0):
+                print("Program has checked " + str(i) + " permutations")
+                print(rho)
+
+    
+    
+    print("Solution found after " + str(i) + " iterations")
+
+    return low_rho, lowest_genus
+
+
 
 def random_transition(neighbors, neighbor_genuses, n):
 
@@ -214,26 +320,6 @@ def random_transition(neighbors, neighbor_genuses, n):
 
     previous_interval = 0
 
-
-    # for i in range(len(neighbor_genuses)):
-    #     # subtract the genus from a number that scales with group size
-    #     # and then square the genuses
-    #     genus = (math.ceil(((n)** 2)/4) - neighbor_genuses[i]) ** 2
-    #     # print("New genus: ", genus)
-    #     if(genus > 0):
-    #         # append interval
-    #         interval = previous_interval + genus
-    #         intervals.append(interval)
-    #         previous_interval = interval
-    #         search_size = search_size + genus
-    #         # save information at this candidates location in the dictionary
-    #         candidates[interval] = [neighbor_genuses[i], neighbors[i]]
-    #     else:
-    #         continue
-    
-    # print("Candidates: ", candidates)
-    # print('Search size:', search_size)
-    # print(intervals)
 
     genus_mappings = {}
     collections = {}
@@ -270,26 +356,6 @@ def random_transition(neighbors, neighbor_genuses, n):
             continue
 
 
-    # for i in range(len(neighbor_genuses)):
-    #     genus = (math.ceil(((n)** 2)/4) - neighbor_genuses[i]) ** 2
-        
-    #     if ((genus > 0)):
-    #         print("interval:", interval)
-    #         if(genus not in genuses):
-    #             genuses.append(genus)
-    #         if():
-    #             interval = previous_interval + genus
-    #             print("new interval: ", interval)
-    #             genus_mappings[genus] = interval
-    #             print(genus_mappings)
-    #             candidates[interval] = []
-    #             intervals.append(interval)
-    #             previous_interval = interval
-    #             search_size = search_size + genus
-    #         candidates[interval].append([neighbor_genuses[i], neighbors[i]])
-    #     else:
-    #         continue
-
 
     # Now randomly generate a number in the search spaces
 
@@ -314,55 +380,13 @@ def random_transition(neighbors, neighbor_genuses, n):
     
         
 
-
-
-
-
-# hc_search will perform a local search using the hill climbing algorithm
-# to find an optimal cayley map genus for the given Zn group
-
-# will return a list representing rho and the genus of rho as an int
-def hc_search(group):
-
-    n = group
-    opt_genus = optimal_genus(n)
-
-    # before beginning the search, we will randomly generate a rho list
-    # of length n - 1
-
-    rho = generate_random_rho(n)
-
-    print("Beginning search at rho:", rho)
-
-    # now begin the hill climbing algorithm using the randomly generated rho
-    # define a current_permutation to keep track of which permutation
-    # we are currently processing and comparing each neighboring permutation with
-
-    current_permutation = rho
-
-    # keep track of best running genus and rho as we go
-    # sometimes we will move away from the best running genus so we must keep track of it
+def stochastic_hc(current_permutation, genus, neighbors, opt_genus):
 
     best_permutation = current_permutation
 
-    # first evaluate the current permutation
-
-    genus = calculate_genus(current_permutation)
-    
     best_genus = genus
 
-    print("Starting Rho has genus ", genus)
-
-    # If this rho has the optimal genus, then return this rho and its genus
-    if(genus == opt_genus):
-        print("*Starting genus was already optimal*")
-        return current_permutation, genus
-
-    neighbors = find_neighbors(current_permutation)
-    
-
-
-    # loop through the hill_climbing algorithm
+     # loop through the hill_climbing algorithm
     # keep running algorithm until we don't have any ways to get to another permutation
     # the algorithm will break from the loop and return the best rho and its genus
     # once the current permutation's neighbors do not have a lower genus
@@ -421,34 +445,165 @@ def hc_search(group):
         k = k + 1
 
 
-    print("Best running genus after search was " + str(best_genus) + " with rho: " + str(best_permutation))
+    print("Best running genus after hill climber search was " + str(best_genus) + " with rho: " + str(best_permutation) + "\n")
     return best_permutation, best_genus
 
+
+def standard_hc(current_permutation, genus, neighbors, opt_genus):
+
+    starting_permutation = current_permutation
+    # loop through the hill_climbing algorithm
+    # keep running algorithm until we don't have any ways to get to another permutation
+    # the algorithm will break from the loop and return the best rho and its genus
+    # once the current permutation's neighbors do not have a lower genus
+    
+    previous_permutations = []
+
+
+
+    while(len(neighbors) != 0):
+        # keep track of next permutation to move to and its genus for comparison reasons
+        next_permutation = None
+        next_genus = 1000
+        # iterate through all neighbors and compare each of their genuses to find 
+        # most optimal neighbor
+        for i in range(len(neighbors)):
+            # for each neighbor check to see if they have been visited previously
+            prev_perm = False
+            for j in range(len(previous_permutations)):
+                if(previous_permutations[j] == neighbors[i]):
+                    prev_perm = True
+            if(prev_perm != True):
+                neighbor_genus = calculate_genus(neighbors[i])
+                #print("Neighbor " + str(neighbors[i]) + " has genus " + str(neighbor_genus) )
+                if(neighbor_genus <= next_genus):
+                    next_permutation = neighbors[i]
+                    next_genus = neighbor_genus
+                    #if(next_genus == opt_genus):
+                        #return next_permutation, next_genus
+            else:
+                continue
+                #print("Neighbor #" + str(i) + " is a previously visited permutation")
+        
+        # then compare the neighboring genus to the current permutations genus
+        # if none of the neighboring genuses are lower, then just return where we are at
+        # also return if we have traveled in a circle
+        if((next_genus > genus)):
+            return current_permutation, genus
+        else:
+            genus = next_genus
+
+        # move to next permutation and loop again with new neighbors
+        # save the previous permutation to ensure we don't loop endlessly
+        previous_permutations.append(current_permutation)
+        current_permutation = next_permutation
+        #if(current_permutation == starting_permutation):
+            #print("HI")
+            #return current_permutation, genus
+        neighbors = find_neighbors(current_permutation)
+
+
+# hc_search will perform a local search using the hill climbing algorithm
+# to find an optimal cayley map genus for the given Zn group
+
+# will return a list representing rho and the genus of rho as an int
+def hc_search(group, response):
+
+    n = group
+    opt_genus = optimal_genus(n)
+
+    # before beginning the search, we will randomly generate a rho list
+    # of length n - 1
+
+    rho = generate_random_rho(n)
+
+    # now begin the hill climbing algorithm using the randomly generated rho
+    # define a current_permutation to keep track of which permutation
+    # we are currently processing and comparing each neighboring permutation with
+
+    current_permutation = rho
+
+    # keep track of where we start
+    starting_permutation = current_permutation
+
+
+    # first evaluate the current permutation
+
+    genus = calculate_genus(current_permutation)
+
+    # If this rho has the optimal genus, then return this rho and its genus
+    if(genus == opt_genus):
+        print("*Starting genus was already optimal*\n")
+        return current_permutation, genus
+
+    neighbors = find_neighbors(current_permutation)
+    
+    # do a normal hill climb
+    if(response == 2):
+        return standard_hc(current_permutation, genus, neighbors, opt_genus)
+    elif(response == 3):
+        return stochastic_hc(current_permutation, genus, neighbors, opt_genus)
+
+def perform_search(n, response):
+
+    # conduct a brute force search
+    if(response == 1):
+        optimal_rho, genus = brute_search(n)
+        print("The most optimal rho found by the brute force search was " + str(optimal_rho) + " which has a genus of " + str(genus) + "\n")
+
+
+    elif(response == 2 or response == 3):
+        # call hc_search(n) which will carry the bulk of the Hill climbing algorithm
+        # returns the best rho the algorithm could find and its genus
+
+        # 5 hill climbers will be simulated 
+
+        best_hc_genus = 1000
+        best_hc_rho = []
+
+        for i in range(1,6):
+            print("Beginning Hill Climber #" + str(i) + "'s search\n")
+            best_rho, rho_genus = hc_search(n, response)
+
+            if(rho_genus < best_hc_genus):
+                best_hc_genus = rho_genus
+                best_hc_rho = best_rho
+            print("Hill Climber #" + str(i) + " found an optimal rho of " + str(best_rho) + " with genus " + str(rho_genus) + "\n")
+
+        print("Most optimal rho found by the hill climber method: " + str(best_hc_rho) + "\n")
+        print("Rho's genus: " + str(best_hc_genus) + "\n")
+    
+    else:
+        print("Error in user input. Type a 1, 2, or 3 to indicate which method to use.\n")
+    
+
+
 # MAIN
-
-# Ask for user input to decide on which Zn group we are working with
-print("Input an n to indicate which Z_n group you would like to calculate an optimal genus for:")
-n = int(input())
-
-print("Ringel and Young optimal genus for Z_" + str(n) + " is " + str(optimal_genus(n)) + "\n")
+continue_search = True
 
 
-# call hc_search(n) which will carry the bulk of the Hill climbing algorithm
-# returns the best rho the algorithm could find and its genus
+while(continue_search == True):
+    # Ask for user input to decide on which Zn group we are working with
+    print("Input an n to indicate which Z_n group you would like to calculate an optimal genus for:")
+    n = int(input())
 
-# 5 hill climbers will be simulated 
+    print("Ringel and Young optimal genus for Z_" + str(n) + " is " + str(optimal_genus(n)) + "\n")
 
-best_hc_genus = 1000
-best_hc_rho = []
 
-for i in range(1,6):
-    print("Beginning Hill Climber #" + str(i) + "'s search")
-    best_rho, rho_genus = hc_search(n)
+    # Ask user for what kind of search method they would like to use:
+    # Brute force, Hill climbing or Stochastic Hill climb
+    print("Input 1 for a brute force search\n")
+    print("Input 2 for a hill climbing search\n")
+    print("Input 3 for a stochastic hill climbing search\n")
 
-    if(rho_genus < best_hc_genus):
-        best_hc_genus = rho_genus
-        best_hc_rho = best_rho
-    print("Hill Climber #" + str(i) + " found an optimal rho of " + str(best_rho) + " with genus " + str(rho_genus) + "\n")
+    response = int(input())
 
-print("Best rho: ", best_hc_rho)
-print("rho genus: ", best_hc_genus)
+    perform_search(n, response)
+
+    print("Would you like to continue? Type 1 to do a new search or 2 to stop the program")
+    
+    continue_response = int(input())
+
+    # end program
+    if(continue_response == 2):
+        continue_search = False

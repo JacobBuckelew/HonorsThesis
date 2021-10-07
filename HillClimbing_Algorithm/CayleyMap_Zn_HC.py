@@ -305,6 +305,7 @@ n = int(input())
 print("Ringel and Young optimal genus for Z_" + str(n) + " is " + str(optimal_genus(n)) + "\n")
 
 
+
 # call hc_search(n) which will carry the bulk of the Hill climbing algorithm
 # returns the best rho the algorithm could find and its genus
 
