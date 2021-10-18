@@ -8,26 +8,99 @@ Rollins College
 
 """
 
-import math
+import math, random
+
+# Object Classes
 
 # Define a population class to encapsulate all of the generations in a population
 # as well as best_genus for each generation, average_genus for each generation, as
 # well as the most optimal running genus and its permutation throughout all generations
 class Population:
+
+    opt_genus = 90
     def __init__(self, members):
         self.members = members
+    
+    def set_members(self, members):
+        self.members = members
+
+    def set_ringelgenus(self, ringel_genus):
+        self.ringelgenus = ringel_genus
+
+    def set_best_genus(self, best_genus):
+        self.best_genus = best_genus
+    
+    def set_avg_genus(self, avg_genus):
+        self.avg_genus = avg_genus
+    
+    
+    def set_best_rho(self, rho):
+        self.best_rho = rho
+
+    
+    # metrics will iterate through the population to find avg_genus, best_genus, opt_genus, and opt_rho
+    # for each generation
+    def metrics(self):
+
+        ringel_genus = optimal_genus(n)
+        # keep track of average, best, most optimal running rho and its genus
+        # population_members will store individuals
+
+        avg_genus = 0
+        best_genus = 1000
+        best_rho = []
+
+
+
+        
+        # iterate through the members
+        for member in self.members:
+            # find individual's genus
+
+            genus = member.calculate_genus(member.permutation)
+
+            member.set_fitness(genus)
+
+            print(member.fitness)
+
+            # set best_genus if member fitness is less than running best genus
+            if(member.fitness < best_genus):
+                # update population's optimal rho and genus
+                best_rho = member.permutation
+                print("new best genus: ", self.best_genus)
+                opt_genus = genus
+                self.best_genus = genus
+            
+            # Print if we see a rho that satisfies ringel definition, this will be most optimal genus and rho
+            if(member.fitness == self.ringelgenus):
+                print("Ringel and Young optimal genus found")
+                print("Genus: ", member.fitness)
+                print("Rho: ", member.permutation)
+                self.best_genus = genus
+
+            # add up genus to running total to find the average genus in the generation
+
+            avg_genus = avg_genus + genus
+            
+
+
+        print("Done")
+
 
     
     
 
-
+# Define an individual class
 class Individual:
     def __init__(self, permutation):
         self.permutation = permutation
-        print(self.permutation)
+        #print(self.permutation)
     
-    def set_genus(self, genus):
-        self.genus = genus
+    def set_fitness(self, genus):
+        self.fitness = genus
+
+    def get_fitness(self):
+        return self.fitness
 
     
     def calculate_genus(self, rho):
@@ -141,11 +214,84 @@ class Individual:
         return genus
         
 
-a = Individual([1,3,2])
-a.set_genus(a.calculate_genus(a.permutation))
+
+# Functions
+
+# optimal_genus calculates the optimal genus for a complete graph Kn embedding
+# Based on the Ringel and Young Theorem
+# returns an int
+def optimal_genus(n):
+    genus = math.ceil(((n-3)*(n-4))/12)
+    return genus
 
 
-print(a.genus)
+# define random_permutation(n) to generate random permutations for a given group size(n)
+# returns a permutation in the form of a list
+def random_permutation(n):
+    permutation = []
+    
+    # fill permutation with 1, 2, ... n-1
+    i = 1
+    while i < n:
+        permutation.append(i)
+        i = i + 1
+
+    # use random.shuffle to obtain a random permutation
+    random.shuffle(permutation)
+    return permutation
+
+    
+
+
+
+def ga_search(n):
+
+    population_size = 100
+    # population_members will store individuals
+
+    # keep track of average, best, most optimal running rho and its genus
+    # population_members will store individuals
+    population_members = []
+
+
+    for i in range(population_size):
+        # initialize individuals
+        member = Individual(random_permutation(n))
+
+        # add individual to the population of individuals
+        population_members.append(member)
+    
+    population = Population(population_members)
+    
+    population.set_members(population_members)
+    population.set_best_genus(1000)
+
+
+    ringel_genus = optimal_genus(n)
+    population.set_ringelgenus(ringel_genus)
+
+    # calculate metrics of the initial population
+
+    population.metrics()
+
+
+
+   
+
+# MAIN
+
+print("Input an n: ")
+n = int(input())
+
+ga_search(n)
+
+
+
+
+
+
+
+
 
 
     
