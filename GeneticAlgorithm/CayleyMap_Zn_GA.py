@@ -18,6 +18,14 @@ import math, random
 class Population:
 
     opt_genus = 90
+    best_genus = []
+    avg_genus = []
+    best_rho = []
+    sum_fitness = 0
+    members = list
+    ringelgenus = 0
+
+
     def __init__(self, members):
         self.members = members
     
@@ -28,10 +36,16 @@ class Population:
         self.ringelgenus = ringel_genus
 
     def set_best_genus(self, best_genus):
-        self.best_genus = best_genus
+        self.best_genus.append(best_genus)
+    
+    def set_best_rho(self, best_rho):
+        self.best_genus.append(best_rho)
     
     def set_avg_genus(self, avg_genus):
-        self.avg_genus = avg_genus
+        self.avg_genus.append(avg_genus)
+
+    def set_sum_fitness(self, sum_fitness):
+        self.sum_fitness = sum_fitness
     
     
     def set_best_rho(self, rho):
@@ -63,28 +77,45 @@ class Population:
 
             print(member.fitness)
 
-            # set best_genus if member fitness is less than running best genus
+            # If statement to determine best genus so far
+            # set best_genus if member fitness is less than running best genus for this generation
             if(member.fitness < best_genus):
                 # update population's optimal rho and genus
                 best_rho = member.permutation
                 print("new best genus: ", self.best_genus)
-                opt_genus = genus
-                self.best_genus = genus
+                best_genus = genus
             
             # Print if we see a rho that satisfies ringel definition, this will be most optimal genus and rho
             if(member.fitness == self.ringelgenus):
                 print("Ringel and Young optimal genus found")
                 print("Genus: ", member.fitness)
                 print("Rho: ", member.permutation)
-                self.best_genus = genus
+                best_genus = genus
+                best_rho = member.permutation
+
+            
 
             # add up genus to running total to find the average genus in the generation
 
             avg_genus = avg_genus + genus
             
+        sumfitness
+        avg_genus = int(avg_genus/len(self.members))
+        # store best genus in list for this generation
+        self.set_best_genus(best_genus)
 
-
+        # store avg genus in list for this generation
+        self.set_avg_genus(avg_genus)
+        
+        # store best rho in this generation
+        self.set_best_rho(best_rho)
         print("Done")
+
+        print("Best genus for this generation: ", best_genus)
+        print("best rho for this generation: ", best_rho)
+        print("best genuses: ", self.best_genus)
+        print("best rho's: ", self.best_rho)
+        print("Avg genuses: ", self.avg_genus)
 
 
     
@@ -264,7 +295,6 @@ def ga_search(n):
     population = Population(population_members)
     
     population.set_members(population_members)
-    population.set_best_genus(1000)
 
 
     ringel_genus = optimal_genus(n)
@@ -285,16 +315,6 @@ n = int(input())
 
 ga_search(n)
 
-
-
-
-
-
-
-
-
-
-    
 
 
 
