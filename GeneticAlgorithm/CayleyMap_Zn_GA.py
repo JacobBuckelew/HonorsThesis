@@ -75,21 +75,18 @@ class Population:
 
             member.set_fitness(genus)
 
-            print(member.fitness)
-
             # If statement to determine best genus so far
             # set best_genus if member fitness is less than running best genus for this generation
             if(member.fitness < best_genus):
                 # update population's optimal rho and genus
                 best_rho = member.permutation
-                print("new best genus: ", self.best_genus)
                 best_genus = genus
             
             # Print if we see a rho that satisfies ringel definition, this will be most optimal genus and rho
             if(member.fitness == self.ringelgenus):
-                print("Ringel and Young optimal genus found")
-                print("Genus: ", member.fitness)
-                print("Rho: ", member.permutation)
+                #print("Ringel and Young optimal genus found")
+                #print("Genus: ", member.fitness)
+                #print("Rho: ", member.permutation)
                 best_genus = genus
                 best_rho = member.permutation
 
@@ -99,7 +96,8 @@ class Population:
 
             avg_genus = avg_genus + genus
             
-        sumfitness
+        sumfitness = avg_genus
+        self.set_sum_fitness(sumfitness)
         avg_genus = int(avg_genus/len(self.members))
         # store best genus in list for this generation
         self.set_best_genus(best_genus)
@@ -109,17 +107,162 @@ class Population:
         
         # store best rho in this generation
         self.set_best_rho(best_rho)
-        print("Done")
-
-        print("Best genus for this generation: ", best_genus)
-        print("best rho for this generation: ", best_rho)
-        print("best genuses: ", self.best_genus)
-        print("best rho's: ", self.best_rho)
-        print("Avg genuses: ", self.avg_genus)
 
 
+        #print("Best genus for this generation: ", best_genus)
+        #print("best rho for this generation: ", best_rho)
+
+    # select_individual will randomly choose an individual based on a roulette wheel selection
+    def select_individual(self):
+
+        individual = list
+
+        # use random.random() to randomly choose an individual out of the population
+        random_choice = self.sum_fitness * (random.random())
+
+
+        # Loop through each member of the population by adding their genus values
+        # once we reach a position that is >= random_choice we will stop and pick that individual
+        # return the index of the individual that is chosen
+        sum = 0
+        i= 0
+        
+        for i in range(len(self.members)):
+            sum = sum + self.members[i].fitness
+            if(sum >= random_choice): 
+                individual = i
+                break
+        
+
+        return individual
     
+
+    # mate(individual1, individual2) will perform the mating between two individuals in a population
+    # The permutations will perform a "crossover" that produces two children. 
+    # this method will return two permuations in the form of lists
+    # this method alongside crossover() are based on Goldbergs PMX method
+    def mate(self, individual_1, individual_2):
+
+        # First we will randomly choose 2 cutoff positions in the permutations
+
+        string_1 = self.members[individual_1].permutation
+        string_2 = self.members[individual_2].permutation
+
+        # random.sample will give 2 unique positions
+        choices = random.sample(list(range(0,len(self.members[0].permutation) - 1)), 2)
+        position_1 = 0
+        position_2 = 0
+        
+        # put the two positions in order
+        if(choices[0] < choices[1]):
+            position_1 = choices[0]
+            position_2 = choices[1]
+        else:
+            position_1 = choices[1]
+            position_2 = choices[0]
+
+        # We'll create two maps that save mappings from Individual1 to Individual2 and then vice versa
+
+        # First create a substring for each individual for the area that gets singled out by the two cuts
+        substring_1 = string_1[position_1:position_2 + 1]
+        substring_1.pop(0)
+        substring_2 = string_2[position_1:position_2 + 1]
+        substring_2.pop(0)
+
+        # map_1 will map from substr 1 to substr2
+        # map_2 will map from substr2 to substr1
+        map_1 = {}
+        map_2 = {}
+
+        for i in range(len(substring_1)):
+            map_1[substring_1[i]] = substring_2[i]
+            map_2[substring_2[i]] = substring_1[i]
+        
+
+        child_1 = self.crossover(string_1,substring_1, substring_2, map_2, position_1, position_2)
+        child_2 = self.crossover(string_2, substring_2, substring_1, map_1, position_1, position_2)
+        print("child 1: ", child_1)
+        print("child 2: ", child_2)
     
+
+    # the crossover function will perform the actual crossover between two permutations
+    # to generate a single child from two parents
+    # to generate two children from two parents, the function will be called twice within crossover()
+
+    #takes a two lists and two dictionaries as args corresponding to first parent, 2nd parent, and their mappings
+    # from each parent to the other
+
+
+    def crossover(self, string, substring_1, substring_2, map, position_1, position_2):
+
+        # extract the base of the child string from parent 
+        # we'll use the map constructed from the other parent
+        # to fill in the values that will get repeated after inserting the substring from that parent into
+        # the middle of the base string
+        child = string[:position_1 + 1] + string[position_2 + 1 :]
+
+        seg_1 = string[:position_1 + 1]
+        seg_2 = string[position_2 + 1:]
+
+        #print("substring:", substring)
+
+        map_keys = list(map.keys())
+
+        # Loop through and see if the value is in list(map.keys())
+        # for both segments
+        for i in range(len(seg_1)):
+            while(seg_1[i] in map_keys):
+                seg_1[i] = map[seg_1[i]]
+
+        for i in range(len(seg_2)):
+            while(seg_2[i] in map_keys):
+                seg_2[i] = map[seg_2[i]]
+
+
+
+        # Now we will concatenate the strings together
+
+        offspring = seg_1 + substring_2
+        offspring = offspring + seg_2
+
+        
+        return offspring
+
+
+    # Generate population will contain all of the steps for generating a new population
+    # including selecting individuals to mate in current population, crossing over the permutations
+    # and also incorporating a mutation aspect
+    # Selection, crossover and mutation, will all be in separate methods within the Population class
+    def generate_population(self):
+
+        # Have a loop that will run until the size of the new population fills up to 100 individuals
+
+        new_members = list(range(100))
+
+        j = 0
+        # while j < size of population(100)
+        while j < len(new_members):
+
+            # parent_1 and parent_2 will be the two mates
+            # call select_individual to a select a random permutation
+            # parent_1, and parent_2 will be index values
+            # so that can be accessed from population for crossover
+            parent_1 = self.select_individual()
+            parent_2 = self.select_individual()
+            #print(parent_1)
+            #print(parent_2)
+
+            print("Parent 1: ", self.members[parent_1].permutation)
+            print("Parent 2: ", self.members[parent_2].permutation)
+
+            self.mate(parent_1, parent_2)
+
+            j = j + 2
+
+
+
+        # first we need to select the next set of individuals
+
 
 # Define an individual class
 class Individual:
@@ -135,7 +278,6 @@ class Individual:
 
     
     def calculate_genus(self, rho):
-        print(rho)
          # calculating a genus  involves first finding the lambdas
 
         # First make a dictionary to hold all of the lambda(key) values given some key which represents a number in the rho
@@ -278,6 +420,7 @@ def random_permutation(n):
 def ga_search(n):
 
     population_size = 100
+    generation_size = 2
     # population_members will store individuals
 
     # keep track of average, best, most optimal running rho and its genus
@@ -304,8 +447,21 @@ def ga_search(n):
 
     population.metrics()
 
+    # Generate the next population of individuals
+    # we'll do the genetic algorithm for the size indicated by generationsize
 
+    for i in range(generation_size):
+        # generate new population
+        population.generate_population()
 
+        # calculate metrics
+        population.metrics()
+
+        # continue on to next generation
+    
+
+    # print final results
+    # population.results()
    
 
 # MAIN
