@@ -17,13 +17,14 @@ import math, random
 # well as the most optimal running genus and its permutation throughout all generations
 class Population:
 
-    opt_genus = 90
+    opt_genus = 200
     best_genus = []
     avg_genus = []
     best_rho = []
     sum_fitness = 0
     members = list
     ringelgenus = 0
+    counter = 0
 
 
     def __init__(self, members):
@@ -38,6 +39,9 @@ class Population:
     def set_best_genus(self, best_genus):
         self.best_genus.append(best_genus)
     
+    def set_opt_genus(self, opt_genus):
+        self.opt_genus = opt_genus
+    
     def set_best_rho(self, best_rho):
         self.best_genus.append(best_rho)
     
@@ -46,6 +50,9 @@ class Population:
 
     def set_sum_fitness(self, sum_fitness):
         self.sum_fitness = sum_fitness
+
+    def update_counter(self, n):
+        self.counter = self.counter + n
     
     
     def set_best_rho(self, rho):
@@ -83,12 +90,14 @@ class Population:
                 best_genus = genus
             
             # Print if we see a rho that satisfies ringel definition, this will be most optimal genus and rho
-            if(member.fitness == self.ringelgenus):
+            # or if it is less than overall optimal genus found by the algorithm
+            if((member.fitness == self.ringelgenus) or (member.fitness < self.opt_genus)):
                 #print("Ringel and Young optimal genus found")
                 #print("Genus: ", member.fitness)
                 #print("Rho: ", member.permutation)
                 best_genus = genus
                 best_rho = member.permutation
+                self.set_opt_genus(genus)
 
             
 
@@ -135,7 +144,32 @@ class Population:
         
 
         return individual
-    
+
+    def save_individuals(self):
+
+        # We'll save the top 10% of individuals
+
+        # Use python's sorted function to sort objects by their fitness values
+
+        individuals = sorted(self.members, key =lambda individual: individual.fitness)
+        top_ten = list
+        if(individuals[10].fitness == self.best_genus[self.counter - 1]):
+            top_individuals = []
+            for i in range(len(individuals)):
+                if(individuals[i].fitness != self.best_genus[self.counter - 1]):
+                    break
+                top_individuals.append(individuals[i])
+                # print(i)
+            top_ten = random.sample(top_individuals, 10)
+        else:
+            top_ten = individuals[0:10]
+
+
+        #for individual in top_ten:
+            #print(individual.fitness)
+
+        return top_ten
+
 
     # mate(individual1, individual2) will perform the mating between two individuals in a population
     # The permutations will perform a "crossover" that produces two children. 
@@ -181,8 +215,8 @@ class Population:
 
         child_1 = self.crossover(string_1,substring_1, substring_2, map_2, position_1, position_2)
         child_2 = self.crossover(string_2, substring_2, substring_1, map_1, position_1, position_2)
-        print("child 1: ", child_1)
-        print("child 2: ", child_2)
+
+        return child_1, child_2
     
 
     # the crossover function will perform the actual crossover between two permutations
@@ -221,7 +255,7 @@ class Population:
 
 
         # Now we will concatenate the strings together
-
+        
         offspring = seg_1 + substring_2
         offspring = offspring + seg_2
 
@@ -233,35 +267,92 @@ class Population:
     # including selecting individuals to mate in current population, crossing over the permutations
     # and also incorporating a mutation aspect
     # Selection, crossover and mutation, will all be in separate methods within the Population class
-    def generate_population(self):
+    def generate_population(self, size):
 
         # Have a loop that will run until the size of the new population fills up to 100 individuals
 
-        new_members = list(range(100))
+        new_members = []
+
+        # we'll save the top 10% of individuals from the current generation to stay in the next generation
+        # in order to preserve "good" traits
+
+        top_ten = self.save_individuals()
+
+        new_members = new_members + top_ten
+
+
+        reserved = len(new_members)
 
         j = 0
+        mutations = 0
         # while j < size of population(100)
-        while j < len(new_members):
-
+        while j < (size - reserved):
             # parent_1 and parent_2 will be the two mates
             # call select_individual to a select a random permutation
             # parent_1, and parent_2 will be index values
             # so that can be accessed from population for crossover
             parent_1 = self.select_individual()
             parent_2 = self.select_individual()
-            #print(parent_1)
-            #print(parent_2)
 
-            print("Parent 1: ", self.members[parent_1].permutation)
-            print("Parent 2: ", self.members[parent_2].permutation)
+            #print("Parent 1: ", self.members[parent_1].permutation)
+            #print("Parent 2: ", self.members[parent_2].permutation)
 
-            self.mate(parent_1, parent_2)
+            # Mate the two parents
+
+            offspring_1, offspring_2 = self.mate(parent_1, parent_2)
+
+            child_1 = Individual(offspring_1)
+            child_2 = Individual(offspring_2)
+            #print("child 1: ", child_1.permutation)
+            #print("child 2:", child_2.permutation)
+
+            # Decide whether or not they will mutate
+            # if random # < 1/ length of perm size
+
+            mutation_p = random.random()
+
+            # set a mutation probability 
+            # Use .05 to start
+
+            if(mutation_p < 0.005):
+                mutations = mutations + 1
+                child_1.mutate()
+                #print("mutated child 1:", child_1.permutation)
+            
+            mutation_p = random.random()
+            if(mutation_p < 0.005):
+                mutations = mutations + 1
+                child_2.mutate()
+                #print("mutated child 2:", child_2.permutation)
+    
+            new_members.append(child_1)
+            new_members.append(child_2)
+
+
+            #print(child_1.permutation)
+            #print(child_2.permutation)
+
+            if(child_1.permutation == [1,6,15,7,17,16,5,18,2,9,13,14,11,4,10,12,8,3]):
+                print("Found optimal")
+            if(child_2.permutation == [1,6,15,7,17,16,5,18,2,9,13,14,11,4,10,12,8,3]):
+                print("Found optimal")
 
             j = j + 2
+            #print("j", j)
 
+        # reset the members list in population
+        self.members = new_members
+        #print(str(mutations) + " total mutations")
 
+    # results() will print out the best running permutation
+    # 
+    def results(self):
 
-        # first we need to select the next set of individuals
+        print("Genetic Algorithm has finished")
+        print("------------------------------------")
+        print("Optimal rho found was " + str(self.best_rho) + " with genus " + str(self.opt_genus))
+        print("Average genus values: ", self.avg_genus)
+        print("Best Genus values:", self.best_genus)
 
 
 # Define an individual class
@@ -385,7 +476,19 @@ class Individual:
 
 
         return genus
-        
+    
+    def mutate(self):
+        # Choose two random indices to swap
+
+        # use random.sample() to get unique values from 
+        # 1 to len - 1
+
+        indices = random.sample(list(range(1,len(self.permutation) - 1)), 2)
+
+        temp = self.permutation[indices[0]]
+        self.permutation[indices[0]] = self.permutation[indices[1]]
+        self.permutation[indices[1]] = temp
+
 
 
 # Functions
@@ -404,13 +507,22 @@ def random_permutation(n):
     permutation = []
     
     # fill permutation with 1, 2, ... n-1
-    i = 1
+    permutation.append(1)
+    i = 2
+    elements = []
     while i < n:
-        permutation.append(i)
+        elements.append(i)
         i = i + 1
 
     # use random.shuffle to obtain a random permutation
-    random.shuffle(permutation)
+    random.shuffle(elements)
+
+    permutation = permutation + elements
+
+    # print(permutation)
+
+    if(permutation == [1,6,15,7,17,16,5,18,2,9,13,14,11,4,10,12,8,3]):
+        print("Found optimal")
     return permutation
 
     
@@ -420,7 +532,7 @@ def random_permutation(n):
 def ga_search(n):
 
     population_size = 100
-    generation_size = 2
+    generation_size = 1000
     # population_members will store individuals
 
     # keep track of average, best, most optimal running rho and its genus
@@ -431,6 +543,8 @@ def ga_search(n):
     for i in range(population_size):
         # initialize individuals
         member = Individual(random_permutation(n))
+
+        #print(member.permutation)
 
         # add individual to the population of individuals
         population_members.append(member)
@@ -447,21 +561,24 @@ def ga_search(n):
 
     population.metrics()
 
+    population.update_counter(1)
+
     # Generate the next population of individuals
     # we'll do the genetic algorithm for the size indicated by generationsize
 
     for i in range(generation_size):
         # generate new population
-        population.generate_population()
+        population.generate_population(population_size)
 
         # calculate metrics
         population.metrics()
 
-        # continue on to next generation
+        # loop back and continue on to next generation
+        population.update_counter(1)
     
 
     # print final results
-    # population.results()
+    population.results()
    
 
 # MAIN
