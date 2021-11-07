@@ -109,7 +109,7 @@ class Population:
 
             avg_genus = avg_genus + genus
             
-        self.sum_scale_genus = avg_genus
+        # self.sum_scale_genus = avg_genus
 
         avg_genus = int(round(avg_genus/len(self.members)))
         # store best genus in list for this generation
@@ -126,30 +126,8 @@ class Population:
         #print("best rho for this generation: ", best_rho)
 
         # select_individual will randomly choose an individual based on a roulette wheel selection
-    def select_individual(self):
-
-        individual = Individual
-
-        # use random.random() to randomly choose an individual out of the population
-        random_choice = self.sum_scale_genus * (random.random())
-
-        
-        #Loop through each member of the population by adding their genus values
-        #once we reach a position that is >= random_choice we will stop and pick that individual
-        #return the index of the individual that is chosen
-        sum = 0
-        i= 0
-        
-        for i in range(len(self.members)):
-            sum = sum + self.members[i].fitness
-            if(sum >= random_choice): 
-                individual = self.members[i]
-                break
-        
-
-        return individual
     
-    #def select_individual(self):
+    def select_individual(self):
 
         # We'll scale the genus values by subtracting them from 2 times the avg genus from the previous generation
         # and then squaring the genus
@@ -163,55 +141,55 @@ class Population:
         # if we are running this method for the first time in this generation then we will create mapping
         # and set the sum of the scaled genuses to prevent having to do it again for selecting the other individuals
         
-        # if(self.sum_scale_genus == 0):
-        #     candidates = {}
+        if(self.sum_scale_genus == 0):
+            candidates = {}
 
-        #     sum_genuses = 0
+            sum_genuses = 0
 
-        #     for i in range(len(self.members)):
-        #         genus = self.members[i].fitness
-        #         print(self.members[i].permutation)
-        #         print("genus: ", genus)
-        #         scale_genus = (((2* self.avg_genus[self.counter - 1]) - genus) ** 3)
+            for i in range(len(self.members)):
+                genus = self.members[i].fitness
+                #print(self.members[i].permutation)
+                #print("genus: ", genus)
+                scale_genus = (((2* self.avg_genus[self.counter - 1]) - genus) ** 2)
 
-        #         print("scaled genus: ", scale_genus)
+                #print("scaled genus: ", scale_genus)
 
-        #         if(scale_genus not in list(candidates.keys())):
-        #             candidates[scale_genus] = []
-        #             sum_genuses = sum_genuses + scale_genus
+                if(scale_genus not in list(candidates.keys())):
+                    candidates[scale_genus] = []
+                    sum_genuses = sum_genuses + scale_genus
                 
-        #         candidates[scale_genus].append(self.members[i])
+                candidates[scale_genus].append(self.members[i])
             
-        #     self.set_genus_mapping(candidates)
-        #     self.set_sum_scale_genus(sum_genuses)
-        #     print("full map: ", self.genus_mapping)
+            self.set_genus_mapping(candidates)
+            self.set_sum_scale_genus(sum_genuses)
+            #print("full map: ", self.genus_mapping)
 
             
             
         # # use random.random() to randomly choose a genus out of the population
-        # random_choice = self.sum_scale_genus * (random.random())
+        random_choice = self.sum_scale_genus * (random.random())
 
         # # search through keys
 
-        # keys = list(self.genus_mapping.keys())
-        # sum = 0
-        # candidate = Individual
+        keys = list(self.genus_mapping.keys())
+        sum = 0
+        candidate = Individual
 
-        # for i in range(len(keys)):
-        #     sum = sum + keys[i]
-        #     if(sum >= random_choice):
-        #         # choose the genus corresponding to the value that was added to the sum
-        #         pool = self.genus_mapping[keys[i]]
-        #         #print("pool:", pool)
-        #         random_individual = random.randint(0, len(pool) - 1)
-        #         candidate = pool[random_individual]
-        #         break
+        for i in range(len(keys)):
+            sum = sum + keys[i]
+            if(sum >= random_choice):
+                # choose the genus corresponding to the value that was added to the sum
+                pool = self.genus_mapping[keys[i]]
+                #print("pool:", pool)
+                random_individual = random.randint(0, len(pool) - 1)
+                candidate = pool[random_individual]
+                break
 
         # print(candidate)
         # print(candidate.permutation)
         # print(candidate.fitness)
 
-        # return candidate
+        return candidate
 
 
 
@@ -254,9 +232,10 @@ class Population:
         string_2 = individual_2.permutation
 
         # random.sample will give 2 unique positions
-        choices = random.sample(list(range(0,len(self.members[0].permutation) - 1)), 2)
+        choices = random.sample(list(range(0,len(self.members[0].permutation))), 2)
         position_1 = 0
         position_2 = 0
+
         
         # put the two positions in order
         if(choices[0] < choices[1]):
@@ -265,6 +244,10 @@ class Population:
         else:
             position_1 = choices[1]
             position_2 = choices[0]
+
+        #print("position_1", position_1)
+        #print("position_2", position_2)
+  
 
         # We'll create two maps that save mappings from Individual1 to Individual2 and then vice versa
 
@@ -285,6 +268,7 @@ class Population:
         
 
         child_1 = self.crossover(string_1,substring_1, substring_2, map_2, position_1, position_2)
+
         child_2 = self.crossover(string_2, substring_2, substring_1, map_1, position_1, position_2)
 
         return child_1, child_2
@@ -364,7 +348,7 @@ class Population:
             parent_1 = self.select_individual()
 
             parent_2 = self.select_individual()
-            while(parent_2 == parent_1):
+            while(parent_2.permutation == parent_1.permutation ):
                 #print("Equal")
                 parent_2 = self.select_individual()
 
@@ -376,7 +360,9 @@ class Population:
             offspring_1, offspring_2 = self.mate(parent_1, parent_2)
 
             child_1 = Individual(offspring_1)
+
             child_2 = Individual(offspring_2)
+
             #print("child 1: ", child_1.permutation)
             #print("child 2:", child_2.permutation)
 
@@ -386,21 +372,54 @@ class Population:
             mutation_p = random.random()
 
             # set a mutation probability 
-            # Use .05 to start
+            # Use .01 to start
 
             if(mutation_p < 0.01):
                 mutations = mutations + 1
                 child_1.mutate()
-                #print("mutated child 1:", child_1.permutation)
-            
+
             mutation_p = random.random()
             if(mutation_p < 0.01):
                 mutations = mutations + 1
                 child_2.mutate()
-                #print("mutated child 2:", child_2.permutation)
     
             new_members.append(child_1)
             new_members.append(child_2)
+
+            print("parent1")
+            print(parent_1.permutation)
+            print("parent2")
+            print(parent_2.permutation)
+            print("child1")
+            print(child_1.permutation)
+            print("child2")
+            print(child_2.permutation)
+
+            child_1.set_fitness(child_1.calculate_genus(child_1.permutation))
+            if(child_1.fitness < self.best_genus[self.counter - 1]):
+                print("child 1 has a best genus")
+                print(child_1.permutation)
+                print(child_1.fitness)
+                print(parent_1.permutation)
+                print(parent_1.fitness)
+                print(parent_2.permutation)
+                print(parent_2.fitness)
+
+            
+            child_2.set_fitness(child_2.calculate_genus(child_2.permutation))
+
+
+            if(child_2.fitness < self.best_genus[self.counter - 1]):
+                print("child 2 has a best genus")
+                print(child_2.permutation)
+                print(child_2.fitness)
+                print(parent_2.permutation)
+                print(parent_2.fitness)
+                print(parent_1.permutation)
+                print(parent_1.fitness)
+            
+
+
 
 
             #print(child_1.permutation)
@@ -429,6 +448,13 @@ class Population:
         print("Optimal rho found was " + str(self.best_rho) + " with genus " + str(self.opt_genus))
         print("Average genus values: ", self.avg_genus)
         print("Best Genus values:", self.best_genus)
+        print("Final Generation:")
+
+        for i in range(len(self.members)):
+            print("Individual", self.members[i])
+            print("Rho", self.members[i].permutation)
+            print("Genus", self.members[i].fitness)
+            print("******************************************")
 
 
 # Define an individual class
@@ -559,12 +585,11 @@ class Individual:
         # use random.sample() to get unique values from 
         # 1 to len - 1
 
-        indices = random.sample(list(range(1,len(self.permutation) - 1)), 2)
+        indices = random.sample(list(range(1,len(self.permutation))), 2)
 
         temp = self.permutation[indices[0]]
         self.permutation[indices[0]] = self.permutation[indices[1]]
         self.permutation[indices[1]] = temp
-
 
 
 # Functions
