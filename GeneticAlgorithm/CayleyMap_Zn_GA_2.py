@@ -374,36 +374,32 @@ class Population:
             # set a mutation probability 
             # Use .01 to start
 
-            if(mutation_p < 0.01):
+            if(mutation_p < 0.005):
                 mutations = mutations + 1
                 child_1.mutate()
 
             mutation_p = random.random()
-            if(mutation_p < 0.01):
+            if(mutation_p < 0.005):
                 mutations = mutations + 1
                 child_2.mutate()
     
             new_members.append(child_1)
             new_members.append(child_2)
 
-            print("parent1")
-            print(parent_1.permutation)
-            print("parent2")
-            print(parent_2.permutation)
-            print("child1")
-            print(child_1.permutation)
-            print("child2")
-            print(child_2.permutation)
+            # print("parent1")
+            # print(parent_1.permutation)
+            # print("parent2")
+            # print(parent_2.permutation)
+            # print("child1")
+            # print(child_1.permutation)
+            # print("child2")
+            # print(child_2.permutation)
 
             child_1.set_fitness(child_1.calculate_genus(child_1.permutation))
             if(child_1.fitness < self.best_genus[self.counter - 1]):
                 print("child 1 has a best genus")
                 print(child_1.permutation)
                 print(child_1.fitness)
-                print(parent_1.permutation)
-                print(parent_1.fitness)
-                print(parent_2.permutation)
-                print(parent_2.fitness)
 
             
             child_2.set_fitness(child_2.calculate_genus(child_2.permutation))
@@ -413,10 +409,6 @@ class Population:
                 print("child 2 has a best genus")
                 print(child_2.permutation)
                 print(child_2.fitness)
-                print(parent_2.permutation)
-                print(parent_2.fitness)
-                print(parent_1.permutation)
-                print(parent_1.fitness)
             
 
 

@@ -189,7 +189,8 @@ def calculate_genus(rho):
 def graph_results(xt, y, x):
 
     fig = plt.figure(figsize=(10,10), dpi=75 )
-    plt.xticks(x, xt, rotation="vertical")
+    plt.xticks(x, xt, rotation="vertical", fontsize = 13)
+    plt.yticks(fontsize= 20)
     plt.plot(y)
     plt.show()
 
@@ -265,8 +266,6 @@ def find_genus(n):
                 print(rho)
 
     x = list(range(0,i))
-    print(xt)
-    print(x)
     graph_results(xt, y, x)
 
     
