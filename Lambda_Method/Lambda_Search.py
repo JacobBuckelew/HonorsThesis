@@ -28,7 +28,7 @@ def lambda_search(n, lam):
 
     # initialize a new lambda if starting the program fresh
     if(len(lam) == 0):
-        current_lambda = [[1,2, n - 3]]
+        current_lambda = [[1, 2, n - 3]]
         x = 1
         y = 2
     else:
@@ -41,7 +41,6 @@ def lambda_search(n, lam):
 
         x = temp[0]
         y = temp[1] + 1
-
 
 
     while(current_lambda[0][1] < current_lambda[0][2]):
@@ -69,7 +68,6 @@ def lambda_search(n, lam):
                         if (k > j) and (not in_lambda(current_lambda, k)) and (not in_lambda(current_lambda, i)) and (not in_lambda(current_lambda, j)):
 
                             current_lambda.append([i, j, k])   
-
             # Need to check if the i was actually added to lambda 
             # There is a possibility that the factor did not append 
 

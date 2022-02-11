@@ -172,6 +172,7 @@ class Population:
         # # search through keys
 
         keys = list(self.genus_mapping.keys())
+        # print(keys)
         sum = 0
         candidate = Individual
 
