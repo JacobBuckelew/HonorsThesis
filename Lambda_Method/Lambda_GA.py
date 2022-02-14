@@ -9,7 +9,7 @@ Rollins College
 """
 
 
-import math, random, copy
+import math, random, copy, os
 
 # Object Classes
 
@@ -380,11 +380,6 @@ class Individual:
                 break
         
 
-        if(len(rho) == 1):
-            print("lam", lam)
-            print("\n")
-            print("optimal rho:", rho)
-            print("\n")
 
         return (len(rho))
         
@@ -498,6 +493,9 @@ def set_lambda(n, lam):
         x = temp[0]
         y = temp[1] + 1
 
+    if(len(current_lambda) == 0):
+        return current_lambda
+
 
     while(current_lambda[0][1] < current_lambda[0][2]):
 
@@ -574,7 +572,7 @@ def ga_search(n):
     opt_fit = 100000
 
 
-    while(len(current_lambda) != 1):
+    while(len(current_lambda) > 1):
         
         print("Initializing:")
 
@@ -633,28 +631,39 @@ def ga_search(n):
         
     keys = results_map.keys()
 
-    print("***********************************************")
-    print("RESULTS\n***********************************************")
+    filename = 'LambdaResults.txt'
+
+    if os.path.exists(filename):
+        append_write = 'a' # append if already exists
+    else:
+        append_write = 'w' # make a new file if not
+
+    fo = open(filename,append_write)
+
+
+    fo.write("***********************************************\n")
+    fo.write("RESULTS FOR Z_" + str(n) +"\n***********************************************\n")
 
     for key in keys:
-        print("Lambda:", key)
-        print("\n")
-        print("Optimal Orientations(s):")
+        fo.write("Lambda: " + str(key))
+        fo.write("\n")
+        #fo.write("Optimal Orientations(s):\n")
         if(len(results_map[key][0]) == 0):
-            print("No optimal orientations.")
-            print("Least number of cycles generated: ", results_map[key][1])
-            print("\n")
+            fo.write("No optimal orientations.\n")
+            fo.write("Least number of cycles generated: " + str(results_map[key][1]))
+            fo.write("\n")
+            fo.write("-----------------------------------------------\n")
         else:
-            #print("Lambdas: ", results_map[key][0])
-            print("Number of optimal orientations:", len(results_map[key][0]) )
-            for i in range(len(results_map[key][0])):
-                print(results_map[key][0][i])
-            print("Cycles:", results_map[key][1])
-            print("\n")
-            print("***********************************************")
+            #fo.write("Lambdas: ", results_map[key][0])
+            fo.write("Number of optimal orientations: " + str(len(results_map[key][0])) + "\n")
+            #for i in range(len(results_map[key][0])):
+                #print(results_map[key][0][i])
+            fo.write("Cycles: " + str(results_map[key][1]))
+            fo.write("\n")
+            fo.write("-----------------------------------------------\n")
         
-        
-    
+    fo.write("\n\n\n")
+    fo.close()
    
 
 # MAIN
