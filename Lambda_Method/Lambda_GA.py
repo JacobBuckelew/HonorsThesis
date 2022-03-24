@@ -10,6 +10,7 @@ Rollins College
 
 
 import math, random, copy, os, time, matplotlib.pyplot as plt
+from os import path
 
 # Object Classes
 
@@ -71,18 +72,21 @@ class Population:
     
     # metrics will iterate through the population to find avg_genus, best_genus, opt_genus, and opt_rho
     # for each generation
-    def metrics(self):
+    def metrics(self, start):
 
-        ringel_genus = optimal_genus(n)
 
         best_fitness = 100000
 
         total_fitness = 0
         # iterate through the members
+        count = 0
         for member in self.members:
             # find individual's genus
             fitness = member.calculate_fitness(member.lam_orient, member.lam_map, member.lam)
             member.set_fitness(fitness)
+            
+
+            
             # If statement to determine best genus so far
             # set best_genus if member fitness is less than running best genus for this generation
             if(member.fitness < best_fitness):
@@ -94,11 +98,23 @@ class Population:
             # or if it is less than overall optimal genus found by the algorithm
             if(member.fitness <= self.opt_fitness):
                 if(member.fitness == 1 and (member.lam not in self.opt_lambda)):
-                    #print("Found Ringel Optimal Solution:")
-                    #print("Lambda:", member.lam)
+                    print("Found Ringel Optimal Solution")
+                    print("Lambda:", member.lam)
+                    print("\n")
                     #print("Cycles in Rho:", member.fitness)
                     #print("\n")
+                    # lam = member.lam
+                    # print(lam)
+                    # print("lam:", type(lam))
+                    # for i in range(len(lam)):
+                    #     for j in range(len(lam[i])):
+                    #         if(lam[i][j] > ((self.group_size - 1)/2)):
+                    #             lam[i][j] = lam[i][j] - self.group_size
+                                
+                    # print("updated lam:", lam)
+                    # member.set_lam(lam)
                     self.opt_lambda.append(member.lam)
+                    count = count + 1
                 #else:
                     #print("Found more optimal lambda:")
                     #print("Lambda: ", member.lam)
@@ -111,22 +127,29 @@ class Population:
 
 
             # add up genus to running total to find the average genus in the generation
-
-        avg_fit = math.floor(int(total_fitness/100))
+        # print("number of optimal individuals in generation:", count)
+        avg_fit = math.floor(int(total_fitness/len(self.members)))
         self.best_fitness.append(best_fitness)
         self.avg_fitness.append(avg_fit)
     
-    def analyze(self):
+    def analyze(self, n, k):
 
-        print(len(self.avg_fitness))
+        
         x_axis = []
-        for i in range(100):
+        for i in range(len(self.best_fitness)):
             x_axis.append(i)
-        print(x_axis)
-        print(self.avg_fitness)
-        plt.plot(x_axis, self.avg_fitness)
-        plt.plot(x_axis, self.best_fitness)
-        plt.show()
+        plt.figure()
+        plt.plot(x_axis, self.avg_fitness, label = "Average Fitness")
+        plt.plot(x_axis, self.best_fitness, label = "Best Fitness")
+        plt.legend(bbox_to_anchor = (0.75, 1.15), ncol = 2)
+        plot_dir = "Lambda_Plots/Z" + str(k)
+        if(not path.exists(plot_dir)):
+            print("Making New Directory")
+            os.mkdir(plot_dir)    
+        plt.savefig("Lambda_Plots/Z" + str(k) +"/Z" + str(k) + "Results_Lambda" + str(n) + ".jpeg")
+            
+
+
 
 
 
@@ -216,8 +239,9 @@ class Population:
         string_1 = individual_1.lam_orient
         string_2 = individual_2.lam_orient
 
-        cutoff = math.floor(len(string_1)/2.0)
+        #cutoff = math.floor(len(string_1)/2.0)
 
+        cutoff = random.randint(0, len(string_1) - 1)
 
         string_1_left = string_1[0:cutoff]
         string_1_right = string_1[cutoff:]
@@ -368,9 +392,7 @@ class Individual:
         
         # find rho
 
-
         for i in range(1, n):
-            
 
             if(i == 1):
                 cycle = [1]
@@ -392,9 +414,8 @@ class Individual:
             if(sum(lam_map.values()) == 0):
                 break
         
-
-
-        return (len(rho))
+        fitness = len(rho)
+        return fitness
         
                 
 
@@ -469,7 +490,7 @@ def set_map(n, orient, current_lambda):
     if(len(lam) == triples):
         for i in range(0, triples):
             for j in range(0, 3):
-                i_inv = n -  lam[i][j] 
+                i_inv = n -  lam[i][j]
                 if i_inv in list(lam_map.keys()):
                     continue
                 # edge case
@@ -477,7 +498,6 @@ def set_map(n, orient, current_lambda):
                     lam_map[i_inv] = lam[i][0]
                 else:
                     lam_map[i_inv] = lam[i][j + 1]
-
 
     return lam, lam_map
 
@@ -488,6 +508,8 @@ def set_map(n, orient, current_lambda):
 def set_lambda(n, lam):
 
     triples = int((n - 1)/3)
+
+
 
 
     # initialize a new lambda if starting the program fresh
@@ -560,15 +582,87 @@ def set_lambda(n, lam):
                 break
 
     end = time.time()
-    print("Time elapsed to find lambda: " + str(end - start) + " seconds")
+    print("Time elapsed to find lambda: " + str(end - start) + " seconds\n")
+
     return current_lambda
+
+def results(n, results_map):
     
+    print("***********************************************\n")
+    print("RESULTS FOR Z_" + str(n) +"\n***********************************************\n")
+
+    keys = results_map.keys()
 
 
-def ga_search(n):
+    for key in keys:
 
-    population_size = 100
-    generation_size = 99
+    
+        print("Lambda: " + str(key))
+        print("\n")
+        # print("Optimal Orientations(s):\n")
+        if(len(results_map[key][0]) == 0):
+            print("No optimal orientations.\n")
+            print("Least number of cycles generated: " + str(results_map[key][1]))
+            print("\n")
+            print("----------------------------------------------\n")
+        else:
+            #print("Lambdas: ", results_map[key][0])
+            print("Number of optimal orientations: " + str(len(results_map[key][0])) + "\n")
+            print("One optimal orientation:")
+            print(results_map[key][0])
+            print("\n")
+            print("-----------------------------------------------")
+        
+
+def export_file(n, results_map):
+
+    keys = results_map.keys()
+    
+    filename = "Lambda_Results/LambdaResults_Z" + str(n) + ".txt"
+
+    #if os.path.exists(filename):
+        #append_write = 'a' # append if already exists
+    #else:
+        #append_write = 'w' # make a new file if not
+
+    fo = open(filename, 'w')
+
+    fo.write("***********************************************\n")
+    fo.write("RESULTS FOR Z_" + str(n) +"\n***********************************************\n")
+
+    for key in keys:
+
+
+        fo.write("Lambda: " + str(key))
+        fo.write("\n")
+        #fo.write("Optimal Orientations(s):\n")
+        if(len(results_map[key][0]) == 0):
+            fo.write("No optimal orientations.\n")
+            fo.write("Least number of cycles generated: " + str(results_map[key][1]))
+            fo.write("\n")
+            fo.write("----------------------------------------------\n")
+        else:
+            #fo.write("Lambdas: ", results_map[key][0])
+            fo.write("Number of optimal orientations: " + str(len(results_map[key][0])) + "\n")
+            fo.write("One optimal orientation:")
+            fo.write(str(results_map[key][0]))
+            fo.write("\n")
+            fo.write("-----------------------------------------------\n")
+        
+    fo.write("\n\n\n")
+    fo.close()
+
+
+
+def ga_search(n, generations, individuals):
+
+    population_size = individuals
+    generation_size = generations - 1
+
+    print("Would you like to save convergence graphs for each generation?")
+    print("Type 1 if you would like to save graphs or else type 0.")
+    response = int(input())
+
     # population_members will store individuals
 
     results_map = {}
@@ -584,10 +678,11 @@ def ga_search(n):
     #print(type(current_lambda))
     opt_fit = 100000
 
-
+    simulation = 0
     while(len(current_lambda) > 1):
-        
-        print("Initializing:")
+        simulation = simulation + 1
+        #print("Initializing:")
+        start = time.time()
 
         for i in range(population_size):
             # initialize individuals
@@ -621,7 +716,7 @@ def ga_search(n):
 
         # calculate metrics of the initial population
 
-        population.metrics()
+        population.metrics(start)
 
         population.update_counter(1)
 
@@ -633,78 +728,38 @@ def ga_search(n):
             population.generate_population(population_size)
 
             # calculate metrics
-            population.metrics()
+            population.metrics(start)
 
             # loop back and continue on to next generation
             population.update_counter(1)
 
-        population.analyze()
+        if(response == 1):
+            population.analyze(simulation, n)
         
+        opt_lam = copy.deepcopy(population.opt_lambda)
+        if(len(opt_lam) > 0):
+            opt_lam = opt_lam[1]
+        altered_lambda = copy.deepcopy(current_lambda)
+        for i in range(len(altered_lambda)):
+            for j in range(len(altered_lambda[i])):
+                if(altered_lambda[i][j] > ((n-1)/2)):
+                    altered_lambda[i][j] = altered_lambda[i][j] - n
+                if(len(opt_lam) > 0):
+                    if(opt_lam[i][j] > ((n-1)/2)):
+                        opt_lam[i][j] = opt_lam[i][j] - n 
 
-        lam_tup = tuple(tuple(factor) for factor in current_lambda)
-        results_map[lam_tup] = [population.opt_lambda, population.opt_fitness]
+        lam_tup = tuple(tuple(factor) for factor in altered_lambda)
+        results_map[lam_tup] = [opt_lam, population.opt_fitness]
         current_lambda = set_lambda(n, current_lambda)
-        print(population.best_fitness)
         population_members = []
         
-    keys = results_map.keys()
-
-    # filename = 'LambdaResults.txt'
-
-    # if os.path.exists(filename):
-    #     append_write = 'a' # append if already exists
-    # else:
-    #     append_write = 'w' # make a new file if not
-
-    # fo = open(filename,append_write)
-
-    # fo.write("***********************************************\n")
-    # fo.write("RESULTS FOR Z_" + str(n) +"\n***********************************************\n")
-
-    # for key in keys:
-    #     fo.write("Lambda: " + str(key))
-    #     fo.write("\n")
-    #     #fo.write("Optimal Orientations(s):\n")
-    #     if(len(results_map[key][0]) == 0):
-    #         fo.write("No optimal orientations.\n")
-    #         fo.write("Least number of cycles generated: " + str(results_map[key][1]))
-    #         fo.write("\n")
-    #         fo.write("----------------------------------------------\n")
-    #     else:
-    #         #fo.write("Lambdas: ", results_map[key][0])
-    #         fo.write("Number of optimal orientations: " + str(len(results_map[key][0])) + "\n")
-    #         #for i in range(len(results_map[key][0])):
-    #             #print(results_map[key][0][i])
-    #         fo.write("Cycles: " + str(results_map[key][1]))
-    #         fo.write("\n")
-    #         fo.write("-----------------------------------------------")
-        
-    # fo.write("\n\n\n")
-    # fo.close()
-
-
-    print("***********************************************\n")
-    print("RESULTS FOR Z_" + str(n) +"\n***********************************************\n")
-
-    for key in keys:
-        print("Lambda: " + str(key))
-        print("\n")
-        print("Optimal Orientations(s):\n")
-        if(len(results_map[key][0]) == 0):
-            print("No optimal orientations.\n")
-            print("Least number of cycles generated: " + str(results_map[key][1]))
-            print("\n")
-            print("----------------------------------------------\n")
-        else:
-            #print("Lambdas: ", results_map[key][0])
-            print("Number of optimal orientations: " + str(len(results_map[key][0])) + "\n")
-            for i in range(len(results_map[key][0])):
-                print(results_map[key][0][i])
-            print("Cycles: " + str(results_map[key][1]))
-            print("\n")
-            print("-----------------------------------------------")
-        
-    print("finished")
+    print("Would you like results printed out or exported?")
+    print("Type 1 for printed results or 2 for exported results")
+    response = int(input())
+    if(response == 1):
+        results(n, results_map)
+    else:
+        export_file(n, results_map)
 
 # MAIN
 
@@ -713,5 +768,13 @@ n = int(input())
 
 n = (12 * n) + 7
 
+print("Input a number of generations: ")
 
-ga_search(n)
+gen = int(input())
+
+print("Input a number of individuals: ")
+
+individ = int(input())
+
+
+ga_search(n, gen, individ)
