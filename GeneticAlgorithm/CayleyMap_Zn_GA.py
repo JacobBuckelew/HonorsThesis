@@ -608,7 +608,7 @@ def random_permutation(n):
 def ga_search(n):
 
     population_size = 100
-    generation_size = 10000
+    generation_size = 100
     # population_members will store individuals
 
     # keep track of average, best, most optimal running rho and its genus

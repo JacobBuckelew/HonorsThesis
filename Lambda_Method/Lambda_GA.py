@@ -9,10 +9,13 @@ Rollins College
 """
 
 
-import math, random, copy, os, time, matplotlib.pyplot as plt
+import math, random, copy, os, timeit, matplotlib.pyplot as plt
 from os import path
 
+
+
 # Object Classes
+
 
 # Define a population class to encapsulate all of the generations in a population
 # as well as best_genus for each generation, average_genus for each generation, as
@@ -72,7 +75,7 @@ class Population:
     
     # metrics will iterate through the population to find avg_genus, best_genus, opt_genus, and opt_rho
     # for each generation
-    def metrics(self, start):
+    def metrics(self, solution_start):
 
 
         best_fitness = 100000
@@ -98,9 +101,9 @@ class Population:
             # or if it is less than overall optimal genus found by the algorithm
             if(member.fitness <= self.opt_fitness):
                 if(member.fitness == 1 and (member.lam not in self.opt_lambda)):
-                    print("Found Ringel Optimal Solution")
-                    print("Lambda:", member.lam)
-                    print("\n")
+                    #print("Found Ringel Optimal Solution")
+                    #print("Lambda:", member.lam)
+                    #print("\n")
                     #print("Cycles in Rho:", member.fitness)
                     #print("\n")
                     # lam = member.lam
@@ -114,6 +117,11 @@ class Population:
                     # print("updated lam:", lam)
                     # member.set_lam(lam)
                     self.opt_lambda.append(member.lam)
+                    if(len(self.opt_lambda) == 1):
+                        solution_end = timeit.default_timer()
+                        solution_time = solution_end - solution_start
+                        print("First solution found in " + str(solution_time) + " seconds")
+                        print("Lambda:", member.lam)
                     count = count + 1
                 #else:
                     #print("Found more optimal lambda:")
@@ -141,6 +149,8 @@ class Population:
         plt.figure()
         plt.plot(x_axis, self.avg_fitness, label = "Average Fitness")
         plt.plot(x_axis, self.best_fitness, label = "Best Fitness")
+        plt.xlabel("Generation")
+        plt.ylabel("Cycles in Rho")
         plt.legend(bbox_to_anchor = (0.75, 1.15), ncol = 2)
         plot_dir = "Lambda_Plots/Z" + str(k)
         if(not path.exists(plot_dir)):
@@ -213,19 +223,21 @@ class Population:
     def save_individuals(self):
     # We'll save the top 10% of individuals
     # Use python's sorted function to sort objects by their fitness values
+        k = math.floor(.10 * len(self.members))
+        
         individuals = sorted(self.members, key =lambda individual: individual.fitness)
-        top_ten = list
-        if(individuals[10].fitness == self.best_fitness[self.counter - 1]):
+        top_k = list
+        if(individuals[k].fitness == self.best_fitness[self.counter - 1]):
             top_individuals = []
             for i in range(len(individuals)):
                 if(individuals[i].fitness != self.best_fitness[self.counter - 1]):
                     break
                 top_individuals.append(individuals[i])
-            top_ten = random.sample(top_individuals, 10)
+            top_k = random.sample(top_individuals, k)
         else:
-            top_ten = individuals[0:10]
+            top_k = individuals[0:k]
 
-        return top_ten
+        return top_k
 
 
     # mate(individual1, individual2) will perform the mating between two individuals in a population
@@ -273,7 +285,7 @@ class Population:
 
         top_ten = self.save_individuals()
 
-        for i in range(10):
+        for i in range(len(top_ten)):
             lam, lam_map = set_map(self.group_size, top_ten[i].lam_orient, self.current_lambda)
             top_ten[i].set_map(lam_map)
             top_ten[i].set_lam(lam)
@@ -304,15 +316,18 @@ class Population:
 
             child_2 = Individual(offspring_2)
 
-            mutation_p = random.random()
-            if(mutation_p < 0.01):
-                mutations = mutations + 1
-                child_1.mutate()
+            child_1.mutate()
+            child_2.mutate()
+
+            #mutation_p = random.random()
+            #if(mutation_p < 0.01):
+                #mutations = mutations + 1
+                #child_1.mutate()
             
-            mutation_p = random.random()
-            if(mutation_p < 0.01):
-                mutations = mutations + 1
-                child_2.mutate()
+            #mutation_p = random.random()
+            #if(mutation_p < 0.01):
+                #mutations = mutations + 1
+                #child_2.mutate()
 
             lam, lam_map = set_map(self.group_size, child_1.lam_orient, self.current_lambda)
 
@@ -366,18 +381,17 @@ class Individual:
     
     
     def mutate(self):
-        # Choose one index to flip
+        # Check bit by bit, and flip a bit with a small probability
 
         # use random.sample() to get random index
+        #index = random.randint(0, len(self.lam_orient) - 1)
 
-        index = random.randint(0, len(self.lam_orient) - 1)
+        p = .001
 
-
-
-        if(self.lam_orient[index] == 0):
-            self.lam_orient[index] == 1
-        else:
-            self.lam_orient[index] = 0
+        for i in range(len(self.lam_orient)):
+            random_value = random.random()
+            if(random_value <= p):
+                self.lam_orient[i] = (self.lam_orient[i] + 1) % 2
 
         
     def calculate_fitness(self, lam_orient, lam_map, lam):
@@ -531,7 +545,7 @@ def set_lambda(n, lam):
     if(len(current_lambda) == 0):
         return current_lambda
 
-    start = time.time()
+    start = timeit.default_timer()
     while(current_lambda[0][1] < current_lambda[0][2]):
         # first check if lambda is already full, in which case we have a full set of triplets
         if len(current_lambda) == triples:
@@ -581,7 +595,7 @@ def set_lambda(n, lam):
                     y = x + 1
                 break
 
-    end = time.time()
+    end = timeit.default_timer()
     print("Time elapsed to find lambda: " + str(end - start) + " seconds\n")
 
     return current_lambda
@@ -659,10 +673,12 @@ def ga_search(n, generations, individuals):
     population_size = individuals
     generation_size = generations - 1
 
+    
     print("Would you like to save convergence graphs for each generation?")
     print("Type 1 if you would like to save graphs or else type 0.")
     response = int(input())
 
+    solution_start = timeit.default_timer()
     # population_members will store individuals
 
     results_map = {}
@@ -682,7 +698,7 @@ def ga_search(n, generations, individuals):
     while(len(current_lambda) > 1):
         simulation = simulation + 1
         #print("Initializing:")
-        start = time.time()
+        start = timeit.default_timer()
 
         for i in range(population_size):
             # initialize individuals
@@ -716,7 +732,7 @@ def ga_search(n, generations, individuals):
 
         # calculate metrics of the initial population
 
-        population.metrics(start)
+        population.metrics(solution_start)
 
         population.update_counter(1)
 
@@ -728,11 +744,12 @@ def ga_search(n, generations, individuals):
             population.generate_population(population_size)
 
             # calculate metrics
-            population.metrics(start)
+            population.metrics(solution_start)
 
             # loop back and continue on to next generation
             population.update_counter(1)
 
+        print("Num of optimal orientations:", len(population.opt_lambda))
         if(response == 1):
             population.analyze(simulation, n)
         
@@ -752,13 +769,16 @@ def ga_search(n, generations, individuals):
         results_map[lam_tup] = [opt_lam, population.opt_fitness]
         current_lambda = set_lambda(n, current_lambda)
         population_members = []
-        
+    
+    end_time = timeit.default_timer()
+    final_time = end_time - solution_start
+    print("Algorithm ran for " + str(final_time) + " seconds.")
     print("Would you like results printed out or exported?")
     print("Type 1 for printed results or 2 for exported results")
     response = int(input())
     if(response == 1):
         results(n, results_map)
-    else:
+    if(response == 2):
         export_file(n, results_map)
 
 # MAIN

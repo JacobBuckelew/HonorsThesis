@@ -8,7 +8,7 @@ Fall 2021
 Rollins College
 """
 
-import math, random
+import math, random, timeit
 import numpy as np
 from numpy.random import rand
 
@@ -264,8 +264,6 @@ def random_transition(neighbors, neighbor_genuses, n):
                 candidates[genus].append([neighbor_genuses[i], neighbors[i]])
                 collections[genus_intervalmap[genus]].append(neighbors[i])
             
-
-
         else:
             continue
 
@@ -322,10 +320,12 @@ def random_transition(neighbors, neighbor_genuses, n):
 # to find an optimal cayley map genus for the given Zn group
 
 # will return a list representing rho and the genus of rho as an int
-def hc_search(group):
+def hc_search(group, solution_start):
 
     n = group
     opt_genus = optimal_genus(n)
+
+
 
     # before beginning the search, we will randomly generate a rho list
     # of length n - 1
@@ -356,6 +356,9 @@ def hc_search(group):
     # If this rho has the optimal genus, then return this rho and its genus
     if(genus == opt_genus):
         print("*Starting genus was already optimal*")
+        solution_end = timeit.default_timer()
+        solution_time = solution_end - solution_start
+        print("Solution found in " + str(solution_time) + " seconds")
         return current_permutation, genus
 
     neighbors = find_neighbors(current_permutation)
@@ -370,7 +373,7 @@ def hc_search(group):
 
     # stochastic hill climbing requires looping for a definite interval of time
     k = 1
-    while(k < 501):
+    while(k < 500):
         next_permutation = None
         transition = False
         next_genus = 1000
@@ -384,7 +387,7 @@ def hc_search(group):
         for i in range(size_neighbors):
             neighbor_genus = calculate_genus(neighbors[i])
             #print("Neighbor " + str(neighbors[i]) + " has genus " + str(neighbor_genus) )
-
+                
              # Decide whether to accept transitioning to this neighbor or not
 
             neighbor_genuses.append(neighbor_genus)
@@ -440,14 +443,19 @@ print("Ringel and Young optimal genus for Z_" + str(n) + " is " + str(optimal_ge
 
 best_hc_genus = 1000
 best_hc_rho = []
-
 for i in range(1,6):
+    solution_start = timeit.default_timer()
     print("Beginning Hill Climber #" + str(i) + "'s search")
-    best_rho, rho_genus = hc_search(n)
+    best_rho, rho_genus = hc_search(n, solution_start)
 
     if(rho_genus < best_hc_genus):
         best_hc_genus = rho_genus
         best_hc_rho = best_rho
+    
+    solution_end = timeit.default_timer()
+    solution_time = solution_end - solution_start
+    print(rho_genus)
+    print("Solution found in " + str(solution_time) + " seconds ")
     print("Hill Climber #" + str(i) + " found an optimal rho of " + str(best_rho) + " with genus " + str(rho_genus) + "\n")
 
 print("Best rho: ", best_hc_rho)

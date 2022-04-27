@@ -10,7 +10,9 @@ Rollins College
 
 
 
-import math
+import math, timeit
+from tracemalloc import start
+from turtle import st
 
 
 # optimal_genus calculates the optimal genus for a complete graph Kn embedding
@@ -180,9 +182,6 @@ def calculate_genus(rho):
 
     genus = int((euler_char - 2)/(-2))
 
-    print(rho)
-    print(genus)
-
     return genus
 
 
@@ -192,6 +191,8 @@ def calculate_genus(rho):
 def find_genus(n):
     # n - 1 elements in our rho
     elements = n - 1
+
+    start_solution = timeit.default_timer()
 
     # keep track of the permutation that generates most optimal genus(based on Ringel and Young theorem)
     optimal_rho = list
@@ -229,6 +230,12 @@ def find_genus(n):
         # keep track of a running lowest genus or find the optimal one according to ringel and young
         if(loop == True):
             genus = calculate_genus(rho)
+            if(genus == opt_genus):
+                print("optimal solution found")
+                print(rho)
+                end_solution = timeit.default_timer()
+                solution_time = end_solution - start_solution
+                print("Solution found in " + str(solution_time) + " seconds")
             if(genus < lowest_genus):
                 print("*Found lower genus*")
                 print("rho:", rho)

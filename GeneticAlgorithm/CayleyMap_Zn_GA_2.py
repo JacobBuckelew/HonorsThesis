@@ -8,7 +8,8 @@ Rollins College
 
 """
 
-import math, random
+import math, random, timeit
+from time import time
 
 # Object Classes
 
@@ -65,7 +66,7 @@ class Population:
     
     # metrics will iterate through the population to find avg_genus, best_genus, opt_genus, and opt_rho
     # for each generation
-    def metrics(self):
+    def metrics(self, solution_start):
 
         ringel_genus = optimal_genus(n)
         # keep track of average, best, most optimal running rho and its genus
@@ -201,24 +202,25 @@ class Population:
 
         # Use python's sorted function to sort objects by their fitness values
 
+        k = math.floor(.10 * len(self.members))
         individuals = sorted(self.members, key =lambda individual: individual.fitness)
-        top_ten = list
-        if(individuals[10].fitness == self.best_genus[self.counter - 1]):
+        top_k = list
+        if(individuals[k].fitness == self.best_genus[self.counter - 1]):
             top_individuals = []
             for i in range(len(individuals)):
                 if(individuals[i].fitness != self.best_genus[self.counter - 1]):
                     break
                 top_individuals.append(individuals[i])
                 # print(i)
-            top_ten = random.sample(top_individuals, 10)
+            top_k = random.sample(top_individuals, k)
         else:
-            top_ten = individuals[0:10]
+            top_k = individuals[0:k]
 
 
         #for individual in top_ten:
             #print(individual.fitness)
 
-        return top_ten
+        return top_k
 
 
     # mate(individual1, individual2) will perform the mating between two individuals in a population
@@ -625,14 +627,16 @@ def random_permutation(n):
 
 def ga_search(n):
 
-    population_size = 100
-    generation_size = 10000
+    population_size = 75
+    generation_size = 75
     # population_members will store individuals
 
     # keep track of average, best, most optimal running rho and its genus
     # population_members will store individuals
     population_members = []
 
+
+    solution_start = timeit.default_timer()
 
     for i in range(population_size):
         # initialize individuals
@@ -653,7 +657,7 @@ def ga_search(n):
 
     # calculate metrics of the initial population
 
-    population.metrics()
+    population.metrics(solution_start)
 
     population.update_counter(1)
 
@@ -662,10 +666,11 @@ def ga_search(n):
 
     for i in range(generation_size):
         # generate new population
+        print("generating new population")
         population.generate_population(population_size)
 
         # calculate metrics
-        population.metrics()
+        population.metrics(solution_start)
 
         # loop back and continue on to next generation
         population.update_counter(1)
@@ -673,6 +678,9 @@ def ga_search(n):
 
     # print final results
     population.results()
+    end_solution = timeit.default_timer()
+    solution_time = end_solution - solution_start
+    print("Solution found in " + str(solution_time) + " seconds")
    
 
 # MAIN

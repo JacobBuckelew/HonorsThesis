@@ -8,7 +8,7 @@ Fall 2021
 Rollins College
 """
 
-import math, random
+import math, random, timeit
 import numpy as np
 
 
@@ -197,10 +197,11 @@ def find_neighbors(rho):
 # to find an optimal cayley map genus for the given Zn group
 
 # will return a list representing rho and the genus of rho as an int
-def hc_search(group):
+def hc_search(group, solution_start):
 
     n = group
     opt_genus = optimal_genus(n)
+
 
     # before beginning the search, we will randomly generate a rho list
     # of length n - 1
@@ -228,6 +229,9 @@ def hc_search(group):
     # If this rho has the optimal genus, then return this rho and its genus
     if(genus == opt_genus):
         print("*Starting genus was already optimal*")
+        solution_end = timeit.default_timer()
+        solution_time = solution_end - solution_start
+        print("Solution found in " + str(solution_time) + " seconds ")
         return current_permutation, genus
 
     neighbors = find_neighbors(current_permutation)
@@ -246,25 +250,25 @@ def hc_search(group):
     while(len(neighbors) != 0):
         # keep track of next permutation to move to and its genus for comparison reasons
         next_permutation = None
-        print("All previous permutations:", previous_permutations)
+        #print("All previous permutations:", previous_permutations)
         next_genus = 1000
-        print("Rho's Neighbors: ", neighbors)
+        #print("Rho's Neighbors: ", neighbors)
         # iterate through all neighbors and compare each of their genuses to find 
         # most optimal neighbor
         for i in range(len(neighbors)):
-            print("Next_genus: ", next_genus)
+            #print("Next_genus: ", next_genus)
             # for each neighbor check to see if they have been visited previously
             prev_perm = False
             for j in range(len(previous_permutations)):
                 if(previous_permutations[j] == neighbors[i]):
-                    print("Found previous permutation:", neighbors[i])
+                    #print("Found previous permutation:", neighbors[i])
                     prev_perm = True
             if(prev_perm != True):
                 neighbor_genus = calculate_genus(neighbors[i])
-                print("Neighbor " + str(neighbors[i]) + " has genus " + str(neighbor_genus) )
+                #print("Neighbor " + str(neighbors[i]) + " has genus " + str(neighbor_genus) )
                 if(neighbor_genus <= next_genus):
                     next_permutation = neighbors[i]
-                    print("Next permutation", next_permutation)
+                    #print("Next permutation", next_permutation)
                     next_genus = neighbor_genus
                     #if(next_genus == opt_genus):
                         #return next_permutation, next_genus
@@ -272,7 +276,7 @@ def hc_search(group):
                 print("Neighbor #" + str(i) + " is a previously visited permutation")
         
         # then compare the neighboring genus to the current permutations genus
-        print("Next lower genus:", next_genus)
+        #print("Next lower genus:", next_genus)
         # if none of the neighboring genuses are lower, then just return where we are at
         # also return if we have traveled in a circle
         if((next_genus > genus)):
@@ -284,12 +288,12 @@ def hc_search(group):
         # save the previous permutation to ensure we don't loop endlessly
         previous_permutations.append(current_permutation)
         current_permutation = next_permutation
-        print("Current permutation: ", current_permutation)
-        print("Starting permutation:, ", starting_permutation)
+        #print("Current permutation: ", current_permutation)
+        #print("Starting permutation:, ", starting_permutation)
         #if(current_permutation == starting_permutation):
             #print("HI")
             #return current_permutation, genus
-        print("New current permutation: ", current_permutation)
+        #print("New current permutation: ", current_permutation)
         neighbors = find_neighbors(current_permutation)
 
 
@@ -315,13 +319,17 @@ best_hc_genus = 1000
 best_hc_rho = []
 
 for i in range(1,6):
+    solution_start = timeit.default_timer()
     print("Beginning Hill Climber #" + str(i) + "'s search")
-    best_rho, rho_genus = hc_search(n)
+    best_rho, rho_genus = hc_search(n, solution_start)
 
     if(rho_genus < best_hc_genus):
         best_hc_genus = rho_genus
         best_hc_rho = best_rho
     print("Hill Climber #" + str(i) + " found an optimal rho of " + str(best_rho) + " with genus " + str(rho_genus) + "\n")
-
+    solution_end = timeit.default_timer()
+    solution_time = solution_end - solution_start
+    print(rho_genus)
+    print("Solution found in " + str(solution_time) + " seconds ")
 print("Best rho: ", best_hc_rho)
 print("rho genus: ", best_hc_genus)

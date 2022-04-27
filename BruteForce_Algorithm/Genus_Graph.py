@@ -188,11 +188,13 @@ def calculate_genus(rho):
 # of genus across the rhos in a certain groyp
 def graph_results(xt, y, x):
 
-    fig = plt.figure(figsize=(10,10), dpi=75 )
+    fig = plt.figure(figsize=(20,14), dpi=75 )
     plt.xticks(x, xt, rotation="vertical", fontsize = 13)
     plt.yticks(fontsize= 20)
+    ax = plt.gca()
+    ax.set_xticks(ax.get_xticks()[::4])
     plt.plot(y)
-    plt.show()
+    plt.savefig("GenusGraph.jpeg")
 
 
 
